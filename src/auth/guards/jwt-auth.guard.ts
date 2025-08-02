@@ -41,11 +41,8 @@ export class JwtAuthGuard extends AuthGuard('jwt') implements CanActivate {
             await this.authService.validateRefreshToken(refreshToken);
           const newAccessToken = this.authService.generateAccessToken(payload);
 
-          res.cookie('accessToken', newAccessToken, {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'strict',
-          });
+          const cookieOptions = this.configService.getOrThrow('cookie').options;
+          res.cookie('accessToken', newAccessToken, cookieOptions);
 
           req.headers['authorization'] = `Bearer ${newAccessToken}`;
         } catch (err) {

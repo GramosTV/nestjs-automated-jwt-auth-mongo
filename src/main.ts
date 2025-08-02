@@ -21,6 +21,7 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   const cookieSecret = configService.get<string>('cookie.secret');
+  const cookieOptions = configService.getOrThrow('cookie').options;
   const secureSecret =
     cookieSecret && cookieSecret.length >= 32
       ? cookieSecret
@@ -32,9 +33,9 @@ async function bootstrap() {
     key: Buffer.from(secureSecret, 'hex'),
     cookieName: 'session',
     cookie: {
-      path: '/',
-      httpOnly: true,
-      secure: true,
+      ...cookieOptions,
+      // Override maxAge for session cookie to be longer
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours for session
     },
   });
 

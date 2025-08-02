@@ -22,10 +22,18 @@ import {
   AuthFastifyRequest,
   LoginFastifyRequest,
 } from './interfaces/auth-fastify-request.interface';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private configService: ConfigService,
+  ) {}
+
+  private getCookieOptions() {
+    return this.configService.getOrThrow('cookie').options;
+  }
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
@@ -38,16 +46,10 @@ export class AuthController {
       req.user,
     );
 
-    res.setCookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-    });
-    res.setCookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-    });
+    const cookieOptions = this.getCookieOptions();
+
+    res.setCookie('refreshToken', refreshToken, cookieOptions);
+    res.setCookie('accessToken', accessToken, cookieOptions);
 
     return res.send({ accessToken });
   }
@@ -82,11 +84,8 @@ export class AuthController {
 
     const { accessToken } = await this.authService.refreshToken(refreshToken);
 
-    res.setCookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-    });
+    const cookieOptions = this.getCookieOptions();
+    res.setCookie('accessToken', accessToken, cookieOptions);
 
     return { accessToken };
   }
@@ -130,17 +129,10 @@ export class AuthController {
       const { accessToken, refreshToken } =
         await this.authService.googleLogin(req);
 
-      res.setCookie('refreshToken', refreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'strict',
-      });
+      const cookieOptions = this.getCookieOptions();
 
-      res.setCookie('accessToken', accessToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'strict',
-      });
+      res.setCookie('refreshToken', refreshToken, cookieOptions);
+      res.setCookie('accessToken', accessToken, cookieOptions);
 
       return res.send({ accessToken });
     } catch (error) {
