@@ -16,6 +16,7 @@ import {
   JwtRefreshPayload,
 } from './interfaces/jwt-payload.interface';
 import { MailService } from '../mail/mail.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -24,13 +25,16 @@ export class AuthService {
     private jwtService: JwtService,
     private refreshTokensService: RefreshTokensService,
     private mailService: MailService,
+    private configService: ConfigService,
   ) {}
 
   generateAccessToken(payload: JwtAccessPayload): string {
     try {
       return this.jwtService.sign(payload, {
-        expiresIn: '15m',
-        secret: process.env.JWT_SECRET,
+        expiresIn: this.configService.getOrThrow<string>(
+          'jwt.accessTokenExpiry',
+        ),
+        secret: this.configService.getOrThrow<string>('jwt.secret'),
       });
     } catch (error) {
       throw new InternalServerErrorException('Error generating access token');
@@ -40,7 +44,7 @@ export class AuthService {
   async validateRefreshToken(refreshToken: string): Promise<JwtRefreshPayload> {
     try {
       const decoded = this.jwtService.verify(refreshToken, {
-        secret: process.env.JWT_REFRESH_SECRET,
+        secret: this.configService.getOrThrow<string>('jwt.refreshSecret'),
       });
 
       const token = await this.refreshTokensService.findOne(decoded.jti);
@@ -118,7 +122,7 @@ export class AuthService {
   async logout(refreshToken: string) {
     try {
       const decoded = this.jwtService.verify(refreshToken, {
-        secret: process.env.JWT_REFRESH_SECRET,
+        secret: this.configService.getOrThrow<string>('jwt.refreshSecret'),
       });
       await this.refreshTokensService.revoke(decoded.jti);
       return { message: 'Logout successful' };
@@ -152,8 +156,11 @@ export class AuthService {
           this.jwtService.sign(
             { userId: user.id },
             {
-              expiresIn: '20m',
-              secret: process.env.JWT_PASSWORD_SECRET,
+              expiresIn: this.configService.getOrThrow<string>(
+                'jwt.passwordResetExpiry',
+              ),
+              secret:
+                this.configService.getOrThrow<string>('jwt.passwordSecret'),
             },
           ),
         );
@@ -173,7 +180,7 @@ export class AuthService {
   async confirmResetPassword(token: string, password: string) {
     try {
       const decoded = await this.jwtService.verify(token, {
-        secret: process.env.JWT_PASSWORD_SECRET,
+        secret: this.configService.getOrThrow<string>('jwt.passwordSecret'),
       });
       const user = await this.usersService.findOneById(decoded.userId);
       if (!user) {

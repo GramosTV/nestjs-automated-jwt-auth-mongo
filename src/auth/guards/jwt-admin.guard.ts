@@ -8,10 +8,14 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import * as jwt from 'jsonwebtoken';
 import { AuthService } from '../auth.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class JwtAdminGuard extends AuthGuard('admin') implements CanActivate {
-  constructor(@Inject(AuthService) private readonly authService: AuthService) {
+  constructor(
+    @Inject(AuthService) private readonly authService: AuthService,
+    private configService: ConfigService,
+  ) {
     super();
   }
 
@@ -27,7 +31,10 @@ export class JwtAdminGuard extends AuthGuard('admin') implements CanActivate {
     }
 
     try {
-      jwt.verify(accessToken, process.env.JWT_SECRET!);
+      jwt.verify(
+        accessToken,
+        this.configService.getOrThrow<string>('jwt.secret'),
+      );
     } catch (err) {
       if (refreshToken) {
         try {

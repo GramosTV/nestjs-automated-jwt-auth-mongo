@@ -1,5 +1,7 @@
 # NestJS Automated JWT Authentication
 
+> 💡 **Looking for TypeORM variant?** Check out the [TypeORM variant](https://github.com/GramosTV/nestjs-automated-jwt-auth) for a TypeORM implementation of this project.
+
 <p align="center">
   <img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" />
 </p>

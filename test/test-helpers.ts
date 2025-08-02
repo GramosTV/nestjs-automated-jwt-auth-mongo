@@ -7,6 +7,10 @@ import {
 } from '../src/refresh-tokens/schemas/refresh-token.schema';
 import dbConfig from '../src/config/db.config';
 import 'dotenv/config';
+import appConfig from '../src/config/app.config';
+import jwtConfig from '../src/config/jwt.config';
+import cookieConfig from '../src/config/cookie.config';
+import googleConfig from '../src/config/google.config';
 
 export function getTestDbConfig() {
   const testDbName = 'test_db';
@@ -24,7 +28,7 @@ export function getTestDbConfig() {
     imports: [
       ConfigModule.forRoot({
         isGlobal: true,
-        load: [dbConfig],
+        load: [dbConfig, appConfig, jwtConfig, cookieConfig, googleConfig],
       }),
       MongooseModule.forRoot(mongoUri),
       MongooseModule.forFeature([
